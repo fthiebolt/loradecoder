@@ -1,22 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# legacy dataCOllector (i.e Hamdi release for mongoDB)
+# loradecoder app.
 #
-# dataCOllectors are the only applications allowed to push data sensors to
-# the neOCampus database.
+# This app. decodes raw LoRa messages into new messages repulished in our MQTT
+#   broker in a way to get interpreted by our dataCOllector.
 #
-# This legacy application has been written by our Ph.D Hamdi.
-# It features a MQTT client that collects data, transform them and finally
-# write it to the mongoDB database.
-#
-# Note: when i started to rewrote the whole data ingestion mechanism, i found
-# that many case are not managed (e.g energy sensors or sensors without subID
-# like noise sensors ...) ==> dump to collection 'failedData'
-#
-#
-# F.Thiebolt    mar.20  update
-# H.BenHamou    2017    initial release
+# F.Thiebolt    nov.20  initial release
 #
 
 
@@ -36,8 +26,7 @@ import threading
 # Logging
 import logging
 
-# MongoDB client
-from pymongo.mongo_client import MongoClient
+# URL parser
 from urllib.parse import quote_plus
 
 # --- project imports
@@ -57,11 +46,6 @@ import settings
 # Global variables
 # (scope: this file)
 #
-
-# MongoDB related attributes
-mydb        = None
-valueUnits  = None  # { 'ppm':3, 'lux':4, 'w/m2':5, 'co2':2, ... }
-hints       = None  # { 'u4/campusfab/temperature/auto_92F8/79': [ <idSensor>, <id_piece> ], ... }
 
 _condition          = None  # conditional variable used as interruptible timer
 _shutdownEvent      = None  # signall across all threads to send stop event
@@ -88,6 +72,19 @@ def ctrlc_handler(signum, frame):
         _condition.release()
     except Exception as ex:
         pass
+
+
+
+
+
+
+TO BE CONTINUED:
+- remove everything from MongoDB
+- implement extended Cayenne LPP decoder
+- ...
+
+
+
 
 
 #
