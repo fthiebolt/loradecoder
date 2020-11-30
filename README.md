@@ -1,7 +1,10 @@
-# [neOCampus] dataCOllector: LIVE and OFFLINE data retriever #
+# [neOCampus] loradecoder: LoRaWAN msg decoder #
 ______________________________________________________________
 
-This app. is responsible to collect data from both live (MQTT) and offline (API) sources.
+This app. is responsible for decoding LoRaWAN messages from the neOCampus LoRaWAN-server.
+It collects raw LoRaWAN frames from LORA_TOPIC, it decodes the payload (extended Cayenne LLC format).
+Once decoded, localized (in conjunction with sensOCampus), the message is (re)published in our MQTT topics
+to finally get collected from the neOCampus dataCOllector.
 
 ### Environment variables ###
 When you start this application (see below), you can pass several environment variables:
@@ -13,36 +16,23 @@ When you start this application (see below), you can pass several environment va
   - **MQTT_SERVER** and **MQTT_PORT**
   - **MQTT_USER** and **MQTT_PASSWD** are MQTT credentials
   - **MQTT_TOPICS** json formated list of topics to subscribe to
-  - **MQTT_UNITID** is a neOCampus identifier fr msg filtering
-  - **MONGO_USER** and **MONGO_PASSWD** are MongoDB credentials
-  - **MONGO_SERVER**=172.17.0.1   this is the docker gateway
-  - **MONGO_PORT**=27017
-  - **MONGO_DATABASE**=neocampus    name of the database
-  - **INFLUX_TOKEN**
-  - **INFLUX_SERVER**=172.17.0.1
-  - **INFLUX_PORT**=9999
-  - **INFLUX_ORG**=neOCampus    name of the organization
-  - **INFLUX_BUCKETS** is a list featuring name of 'sensors' and then 'inventory' buckets e.g [ 'ut3_sensors', 'ut3_inventory' ]
+  - **MQTT_UNITID** is a neOCampus identifier for msg filtering
 
 
 ### [HTTP] git clone ###
 Only **first time** operation.
 
-`git clone https://fthiebolt@bitbucket.org/fthiebolt/datacollector.git`  
-*it will then ask for a password*
+`git clone https://github.com/fthiebolt/loradecoder.git`  
 
 ### git pull ###
-We'll make use of the embedded deployment key through a script
 ```
-cd datacollector
+cd loradecoder
 git pull
 ```
-This script will output 'Updated' along with exit code 0 if repository has been updated. Hence you'll need to restart associated scripts to code.
 
 ### git push ###
-In order to be able to push changes, we switch to HTTPS git remote, hence you'll need the **account's password**.
 ```
-cd datacollector
+cd loradecoder
 ./git-push.sh
 ```
 
@@ -58,28 +48,28 @@ git branch -d tmp
 
 ### start container ###
 ```
-cd /neocampus/datacollector
-FLASK_ENV=development FLASK_DEBUG=1 SIM=1 DEBUG=1 INFLUX_TOKEN='token' MQTT_PASSWD='passwd' MONGO_PASSWD='passwd' docker-compose up -d
+cd /neocampus/loradecoder
+FLASK_ENV=development FLASK_DEBUG=1 SIM=1 DEBUG=1 MQTT_PASSWD='passwd' docker-compose up -d
 ```  
 
 ### fast update of existing running container ###
 ```
-cd /neocampus/datacollector
+cd /neocampus/loradecoder
 git pull
-DEBUG=1 INFLUX_TOKEN='token' MQTT_PASSWD='passwd' MONGO_PASSWD='passwd' docker-compose up --build -d
+DEBUG=1 INFLUX_TOKEN='token' MQTT_PASSWD='passwd' docker-compose up --build -d
 ```  
 
 ### ONLY (re)generate image of container ###
 ```
-cd /neocampus/datacollector
+cd /neocampus/loradecoder
 docker-compose --verbose build --force-rm --no-cache
-[alternative] docker build --no-cache -t datacollector -f Dockerfile .
+[alternative] docker build --no-cache -t loradecoder -f Dockerfile .
 ```
 
 ### start container for maintenance ###
 ```
-cd /neocampus/datacollector
-docker run -v /etc/localtime:/etc/localtime:ro -v "$(pwd)"/app:/opt/app:rw -it datacollector bash
+cd /neocampus/loradecoder
+docker run -v /etc/localtime:/etc/localtime:ro -v "$(pwd)"/app:/opt/app:rw -it loradecoder bash
 ```
 
 ### ssh root @ container ? ###

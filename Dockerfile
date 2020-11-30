@@ -1,16 +1,14 @@
 #
-# dataCOllector agent
+# loradecoder container
 #
-# This application grabs raw weather data from the Toulouse
-# metropole weather station, process them and republish in
-# proper topics.
+# This container mainly holds the loradecoder application:
+#   this one collects lorawan frames sent from our lorawan-server,
+#   decodes them and then republish in our MQTT broker with proper path.
 #
-# F.Thiebolt    apr.20  bash as default shell
-# F.Thiebolt    jan.20  massive update
-# Hamdi         2017    initial release
+# F.Thiebolt    Nov.20  initial release
 #
 
-# Fedora 31 at the time of writing
+# Fedora 33 at the time of writing
 FROM fedora:latest
 MAINTAINER "Francois <thiebolt@irit.fr>"
 

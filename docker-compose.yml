@@ -3,19 +3,19 @@ version: '3.5'
 services:
   app:
     build: .
-    image: datacollector
+    image: loradecoder
     # container-name implies only one instance
-    container_name: datacollector
+    container_name: loradecoder
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
       # ONLY for development mode
-      # ==> REQUIRES YOU TO BE WITHIN DATACOLLECTOR repository !!
+      # ==> REQUIRES YOU TO BE WITHIN the loradecoder DIRECTORY !!
       - ${PWD}/app:/opt/app
     network_mode: bridge
     ports:
-      - "8010:5000"     # Web app
-      - "2230:22"       # SSH
+      - "8011:5000"     # Web app
+      - "2231:22"       # SSH
     #env_file:
       # environment section has precedence over env_file
       #- ${PWD}/dataCOllector.env
@@ -32,21 +32,9 @@ services:
       # MQTT
       - MQTT_SERVER
       - MQTT_PORT
-      - MQTT_USER=dataCOllector
+      - MQTT_USER=loradecoder
       - MQTT_PASSWD
       # json format for MQTT_TOPICS to subscribe to
-      - MQTT_TOPICS=[ "u4/+/+", "bu/+/+", "irit/+/+", "irit2/+/+", "ecolab/+/+", "apiary/+/+", "outside/#", "abroad/#" ]
+      - MQTT_TOPICS=[ "_lora/#", "TestTopic/lora/#" ]
       - MQTT_UNITID
-      # MongoDB, server is docker gateway
-      - MONGO_USER=root2
-      - MONGO_PASSWD
-      - MONGO_SERVER=172.17.0.1
-      - MONGO_PORT
-      - MONGO_DATABASE=neocampus
-      # InfluxDB, server is docker gateway
-      - INFLUX_TOKEN
-      - INFLUX_SERVER=172.17.0.1
-      - INFLUX_PORT
-      - INFLUX_ORG=neOCampus
-      - INFLUX_BUCKETS=[ 'sensors', 'inventory' ]
 

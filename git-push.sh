@@ -11,7 +11,7 @@ fi
 
 set -x
 
-#git remote set-url origin https://fthiebolt@bitbucket.org/fthiebolt/datacollector.git
+#git remote set-url origin https://github.com/fthiebolt/loradecoder.git
 git add --all
 git commit -a -m "${msg}"
 git push
