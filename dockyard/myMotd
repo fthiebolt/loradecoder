@@ -12,11 +12,7 @@
 
   Logs
     - tailf /var/log/supervisor/application.log
-    - tailf /var/log/supervisor/live_collector.log
-    - tailf /var/log/supervisor/metrics_collector.log
-    - tailf /var/log/supervisor/sensors_downsampling.log
-    
-  [DEPRECATION]
-    - tailf /var/log/supervisor/legacy_collector.log
+    - tailf /var/log/supervisor/loradecoder.log
+
 ===============================================================================
 

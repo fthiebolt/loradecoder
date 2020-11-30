@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# dataCOllector web. app.
+# loradecoder web. app.
 #
-# F.Thiebolt    Mar.20  initial release
+# F.Thiebolt    Nov.20  initial release
 #
 
 
@@ -83,7 +83,7 @@ def hello_world():
 if __name__ == "__main__":
 
     #
-    print("\n###\n[neOCampus] idataCOllector web. app.\n###")
+    print("\n###\n[neOCampus] loradecoder web. app.\n###")
 
     # start
     app.run( host='0.0.0.0' )
