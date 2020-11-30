@@ -32,7 +32,9 @@ services:
       # MQTT
       - MQTT_SERVER
       - MQTT_PORT
-      - MQTT_USER=loradecoder
+      #- MQTT_USER=loradecoder
+      # [nov.20] only for tests
+      - MQTT_USER=test
       - MQTT_PASSWD
       # json format for MQTT_TOPICS to subscribe to
       - MQTT_TOPICS=[ "_lora/#", "TestTopic/lora/#" ]
