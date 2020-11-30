@@ -1,0 +1,22 @@
+
+=== Welcome ===================================================================
+
+  ** app. location **
+    /opt/app --> main app.
+
+  In order to update this app. from inside the container
+    - supervisorctl stop all
+    - git clone <url.git> <some_dir>
+    - rsync -av <some_dir>/app /opt/
+    - supervisorctl start all
+
+  Logs
+    - tailf /var/log/supervisor/application.log
+    - tailf /var/log/supervisor/live_collector.log
+    - tailf /var/log/supervisor/metrics_collector.log
+    - tailf /var/log/supervisor/sensors_downsampling.log
+    
+  [DEPRECATION]
+    - tailf /var/log/supervisor/legacy_collector.log
+===============================================================================
+

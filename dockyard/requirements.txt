@@ -1,0 +1,23 @@
+# Paho MQTT 1.3.0 does not use client ID with neither '/' nor '+' nor '#'
+# [nov.19] Paho-mqtt 1.4.0 and 1.5.0 hang when using lock in callbacks !!
+paho-mqtt==1.3.*
+# MongoDB client
+pymongo
+# InfluxDB-2.0 client
+# [oct.20] TODO: update to the latest release
+influxdb-client==1.7.0
+influxdb-client[extra]  # for panda data frames
+pandas
+# flash API'n app
+Flask
+Flask-Babel
+Flask-Bootstrap
+Flask-HTTPAuth
+Flask-Login
+Flask-Mail
+Flask-Migrate
+Flask-Moment
+Flask-SQLAlchemy
+Flask-WTF
+Flask-socketio
+Jinja2
