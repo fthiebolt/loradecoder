@@ -18,13 +18,15 @@ from urllib.parse import quote_plus
 
 # --- project imports
 # logging facility
-from logger.logger import log, setLogLevel, getLogLevel
+# from logger.logger import log, setLogLevel, getLogLevel
 
 # MQTT facility
-from comm.mqttConnect import CommModule
+# from mqttConnect import CommModule
 
 # settings
-import settings
+# import settings
+
+import paho.mqtt.client as paho
 
 # #############################################################################
 #
@@ -46,7 +48,7 @@ _shutdownEvent      = None  # signall across all threads to send stop event
 # Function ctrlc_handler
 def ctrlc_handler(signum, frame):
     global _shutdownEvent, _condition
-    print("<CTRL + C> action detected ...");
+    print("<CTRL + C> action detected ...")
     # activate shutdown mode
     assert _shutdownEvent!=None
     _shutdownEvent.set()
@@ -59,31 +61,54 @@ def ctrlc_handler(signum, frame):
         pass
 
 
-#
-# Function to handle MQTT messages
-def myMsgHandler( topic, payload, *args, **kwargs ):
-    ''' function called whenever our MQTT client receive weather data.
-        Beware that it's called by mqtt_loop's thread !
-    '''
 
-    # check for special topics we're not interested in
-    if( topic.startswith('_') or topic.startswith('TestTopic') or "camera" in topic ):
-        log.debug("special topic not for us: %s" % str(topic) )
-        return
 
-    # extract timestamp ... or set it
-    #_dataTime = int(float( payload.get('dateTime', time.time()) ))
-    _dataTime = datetime.utcnow()
+# #####
+# # MQTT
+# print("Instantiate MQTT communications module ...")
+# params = dict()
 
-    log.debug("MSG topic '%s' received ..." % str(topic) )
-    print( payload )
+# # shutown master event
+# params['_shutdownEvent'] = _shutdownEvent
+# params['mqtt_user'] ="test"
+# params['mqtt_passwd'] ="test"
+# params['mqtt_topics'] ="TestTopic/lora/#"
+# params['mqtt_server'] ="neocampus.univ-tlse3.fr"
+# params['mqtt_port'] =1883
+# params['unitID'] =None
 
-    # extract addon parameters ...
-    # ... this way to be sure they are defined ;)
-    try:
-        mydb = kwargs['db']
-        valueUnitsIDS = kwargs['valueUnits']
-        sensorsIDlist = kwargs['hints']
-    except Exception as ex:
-        log.error("missing several parameters (!!) : " + str(ex), exc_info=(getLogLevel().lower()=="debug") )
-        return
+
+# client = None
+
+# try:
+#     # init client ...
+#     client = CommModule( **params )
+#     # ... then start client :)
+#     client.start()
+
+# except Exception as ex:
+#     print("unable to start MQTT comm module (high details): " )
+#     sys.exit(1)
+
+broker="neocampus.univ-tlse3.fr"
+port=1883
+#define callback
+def on_message(client, userdata, message):
+    time.sleep(1)
+    print("received message =",str(message.payload.decode("utf-8")))
+
+client= paho.Client("Client1") #create client object client1.on_publish = on_publish #assign function to callback client1.connect(broker,port) #establish connection client1.publish("house/bulb1","on")
+######Bind function to callback
+client.on_message=on_message
+client.username_pw_set(username="test",password="test")
+print("connecting to broker ",broker)
+client.connect(broker,port)#connect
+client.loop_start() #start loop to process received messages
+print("subscribing ")
+client.subscribe("TestTopic/lora/#")#subscribe
+time.sleep(100)
+# print("publishing ")
+# client.publish("TestTopic/lora/","coucou")#publish
+time.sleep(4)
+client.disconnect() #disconnect
+client.loop_stop() #stop loop

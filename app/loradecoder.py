@@ -205,6 +205,13 @@ def ctrlc_handler(signum, frame):
 #         log.info("[exception][%s] add measure to failedData collection for further processing" % sensorID )
 #         mydb.failedData.insert_one({'topic': topic , 'date': _dataTime, 'payload': payload})
 
+def myMsgHandler(topic, payload):
+    time.sleep(1)
+    log.debug("MSG topic '%s' received ..." % str(topic) )
+    # print( payload )
+    a= payload["data"] #recupere seulement le champ data du message 
+    print(a)
+
 
 
 # #############################################################################
@@ -221,74 +228,6 @@ def main():
 
     # Trap CTRL+C (kill -2)
     signal.signal(signal.SIGINT, ctrlc_handler)
-
-
-    # #
-    # # MongoDB
-    # log.info("Initiate connection to MongoDB.neocampus database ...")
-
-    # _mongo_user = os.getenv("MONGO_USER")
-    # if( _mongo_user is None or _mongo_user == "" ):
-    #     log.error("unspecified MONGO_USER ... aborting")
-    #     time.sleep(3)
-    #     sys.exit(1)
-    
-    # _mongo_passwd = os.getenv("MONGO_PASSWD")
-    # if( _mongo_passwd is None or _mongo_passwd == "" ):
-    #     log.error("unspecified MONGO_PASSWD ... aborting")
-    #     time.sleep(3)
-    #     sys.exit(1)
-
-    # _mongo_server = os.getenv("MONGO_SERVER", settings.MONGO_SERVER)
-    # if( _mongo_server is None or _mongo_server == "" ):
-    #     log.error("unspecified MONGO_SERVER ... aborting")
-    #     time.sleep(3)
-    #     sys.exit(1)
-
-    # _mongo_port = os.getenv("MONGO_PORT", settings.MONGO_PORT)
-    # if( _mongo_port is None or _mongo_port == "" ):
-    #     log.error("unspecified MONGO_PORT ... aborting")
-    #     time.sleep(3)
-    #     sys.exit(1)
-
-    # _mongo_database = os.getenv("MONGO_DATABASE", settings.MONGO_DATABASE)
-    # if( _mongo_database is None or _mongo_database == "" ):
-    #     log.error("unspecified MONGO_DATABASE ... aborting")
-    #     time.sleep(3)
-    #     sys.exit(1)
-
-    # # connect ...
-    # mydb = connect_db( _mongo_user,
-    #                     _mongo_passwd,
-    #                     _mongo_server,
-    #                     _mongo_port,
-    #                     _mongo_database )
-
-    # if( mydb is None ):
-    #     log.error("unable to connect to MongoDB ?!?! ... aborting :(")
-    #     time.sleep(3)
-    #     sys.exit(1)
-
-    # # extract things from mongoDB
-    # valueUnits  = dict()
-    # hints = dict()
-    # # parse 'typecapteur' collection (e.g temperature, co2, humidity etc etc)
-    # for each in mydb.typecapteur.find():
-    #     # parse units of values (e.g luminosity --> lux (inside), w/m2 (outside)
-    #     for inner in each["Libvals"] :
-    #         valueUnits[inner["unite"]] =  inner["idLibVal"]
-
-    #     # parse sensors: each sensor has an ID
-    #     # key nomCapteur: <topic/unitID/subID> e.g u4/campusfab/temperature/auto_92F8/79
-    #     #   value = list( id associated with <topic/unitID/subID>, id piece )
-    #     for inside in each["Capteurs"]:
-    #         hints[ inside["nomCapteur"] ] = [ inside["idCapteur"], inside["Piece_courante"]["idPiece"] ]
-
-    # print("valueUnits : " + str(valueUnits) )
-    # print("hints : " + str(hints) )
-
-    # log.info("MongoDB connection is UP featuring:\n\t{0:,d} measures :)\n\t{1:,d} unmanaged measures :(".format(mydb.measure.count(),mydb.failedData.count()) )
-    # time.sleep(2)
 
 
     #
@@ -339,9 +278,9 @@ def main():
     try:
         # init client ...
         client = CommModule( **params )
-        log.error("coucou j'ai ressus un message")
+        
         # register own message handler
-        # client.handle_message = myMsgHandler
+        client.handle_message = myMsgHandler
 
         # ... then start client :)
         client.start()
