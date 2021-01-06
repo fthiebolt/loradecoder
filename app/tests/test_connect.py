@@ -100,7 +100,7 @@ def on_message(client, userdata, message):
 client= paho.Client("Client1") #create client object client1.on_publish = on_publish #assign function to callback client1.connect(broker,port) #establish connection client1.publish("house/bulb1","on")
 ######Bind function to callback
 client.on_message=on_message
-client.username_pw_set(username="test",password="test")
+client.username_pw_set(username="...",password="...")
 print("connecting to broker ",broker)
 client.connect(broker,port)#connect
 client.loop_start() #start loop to process received messages

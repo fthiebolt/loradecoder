@@ -1,3 +1,13 @@
+# #############################################################################
+#
+# Global variables
+# (scope: this file)
+#
+
+_Cursor = 0 #Correspond a l'emplacement dans la payload
+
+
+
 #Dictionnaire des types de data
 TYPE =[
     {'nom':'analog_input',          'ID':1,  'size':1, 'mult':1},
@@ -28,31 +38,35 @@ TYPE =[
 #         if ind['ID'] == data_type :
 #             return ind['size'] 
 
-#*** Retourne une liste avec size, mult, ref, pas d'un type de data ***
+#*** Retourne une liste avec nom, size, mult, ref, pas d'un type de data ***
 def infodata (data_type):
     #data_type : est un eniter qui correspond au type de la data d'apres la convention cayenne 
 
-    for ind in TYPE :
+    for ind in TYPE : #on parcour le dictionnaire TYPE et on regarde si data_type correspond a une ID connu 
         if ind['ID'] == data_type :
 
-            if 'ref' not in ind :
-                info = [ind['size'],ind['mult'],ind['ref'],ind['pas']]
+            if 'ref' in ind :
+                info = [ind['nom'],ind['size'],ind['mult'],ind['ref'],ind['pas']]
 
             else:
-                info = [ind['size'],ind['mult']]
+                info = [ind['nom'],ind['size'],ind['mult']]
 
+            _Cursor += ind['size']
             return info 
+    print("Pas bon type de data!!!")
+    return [0,0,0,0]
 
 
-#*** Transforme les datas de la conention cayenne en float
+#*** Transforme les datas de la convention cayenne en float
 def transfo_data (info):
-    #info : est la liste renvoye par infodata qui contien size, mult, ref, pas d'un type de data ***
+    #info : est la liste renvoye par infodata qui contien nom, size, mult, ref, pas d'un type de data ***
 
 
     
     return data
 
-    #*** Retourne une ...  avec les informations du capteur pour MQTT
+
+#*** Retourne une ...  avec les informations du capteur pour MQTT
 def decoder (payload, cursor):
     #payload : la payload lora recut en MQTT
     #cursor : emplacement dans la payload du capteur
@@ -62,8 +76,15 @@ def decoder (payload, cursor):
     data = payload[cursor+2 : cursor+2+INFO[0]] #on recupere les data du capteur
 
 
+def main():
+    a = infodata(-5)
+    print(a)
 
 
+
+if __name__ == "__main__":
+    main()
+    pass
 
 
     
