@@ -1,3 +1,5 @@
+
+
 # #############################################################################
 #
 # Global variables
@@ -5,7 +7,6 @@
 #
 
 _Cursor = 0 #Correspond a l'emplacement dans la payload
-
 
 
 #Dictionnaire des types de data
@@ -43,6 +44,7 @@ def infodata (data_type):
     #data_type : est un eniter qui correspond au type de la data d'apres la convention cayenne 
 
     for ind in TYPE : #on parcour le dictionnaire TYPE et on regarde si data_type correspond a une ID connu 
+        global _Cursor
         if ind['ID'] == data_type :
 
             if 'ref' in ind :
@@ -51,20 +53,38 @@ def infodata (data_type):
             else:
                 info = [ind['nom'],ind['size'],ind['mult']]
 
-            _Cursor += ind['size']
+            _Cursor += ind['size'] + 1  #car on a dans la payload type, channel, data 
             return info 
     print("Pas bon type de data!!!")
     return [0,0,0,0]
 
 
 #*** Transforme les datas de la convention cayenne en float
-def transfo_data (info):
-    #info : est la liste renvoye par infodata qui contien nom, size, mult, ref, pas d'un type de data ***
+def transfo_data (info,data):
+    #info : est la liste renvoye par infodata qui contien nom, size, mult, ref, pas d'un type de data 
+    #data : est la data un tableau qui represente la data sous forme cayenne
+    #DATA : est la data sous forme de float 
 
+    if len(info) == 3 : #Les datas sans références
+        if info[1] == 2: #La data est un entier mis sur 2 octet
+            DATA = data[0]+(data[1]<<8) #LSB + MSB*256   
 
-    
-    return data
+        elif info[1] == 3: #La data est un float mis sur 3 octet avec la partie entiere sur 2 octet et la partie float sur 1 octet 
+            DATA = data[0]+(data[1]<<8) #LSB + MSB*256 ici partie entiere
+            DATA += data[2]/256
+            DATA = round(DATA,2) #Pour tronquer a 10^-2 
 
+        elif info[1] == 4: #La data est un float mis sur 4 octet 
+            DATA = data[0]+(data[1]<<8)+(data[2]<<16)+(data[3]<<24) 
+            #TODO ca marche pas !!!!
+
+    else :
+        DATA = (data * info[4])+info[3]
+        # DATA = ((data *25)/100)+20
+
+    return DATA
+
+#TODO faire des cas si il y a des pb !!!!
 
 #*** Retourne une ...  avec les informations du capteur pour MQTT
 def decoder (payload, cursor):
@@ -77,8 +97,11 @@ def decoder (payload, cursor):
 
 
 def main():
-    a = infodata(-5)
+    a = infodata(8)
     print(a)
+    # b=transfo_data(a,[0x00,0x00,0x99,0x42])
+    b=transfo_data(a,1)
+    print(b)
 
 
 
