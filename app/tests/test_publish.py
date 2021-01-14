@@ -1,4 +1,32 @@
+# #############################################################################
+#
+# Import zone
+#
+import os
+import sys
+import signal
+import time
+import json
+from datetime import datetime
+import threading
 
+# Logging
+import logging
+
+# URL parser
+from urllib.parse import quote_plus
+
+# --- project imports
+# logging facility
+# from logger.logger import log, setLogLevel, getLogLevel
+
+# MQTT facility
+# from mqttConnect import CommModule
+
+# settings
+# import settings
+
+import paho.mqtt.client as paho
 
 # #############################################################################
 #
@@ -6,6 +34,8 @@
 # (scope: this file)
 #
 
+_condition          = None  # conditional variable used as interruptible timer
+_shutdownEvent      = None  # signall across all threads to send stop event
 _Cursor =  2 #Correspond a l'emplacement dans la payload, on initialise a 2 car les 2 premiers octet de la payload ne sont pas des datas donc la premiere data est a l'emplacement 3 dans la payload 
 
 
@@ -31,6 +61,10 @@ TYPE =[
     {'nom':'generic_sensor_sign',   'unit':'...',      'ID':18, 'size':4, 'mult':1},
 ]
 
+# #############################################################################
+#
+# Functions
+#
 
 #*** Retourne une liste avec nom, size, mult, ref, pas d'un type de data ***
 def infodata (data_type):
@@ -82,7 +116,7 @@ def transfo_data (info,data):
 
             if pf == 1 : #cas eniter negatif
                 data=data[0] - (data[0]>>7)
-                print("temp :%d"%data)
+                # print("temp :%d"%data)
                 DATA = ((-data) * info[5]*100)/100 + info[4]
 
             else : #cas entier possitif
@@ -110,8 +144,8 @@ def decoder (PAYLOAD):
         _Cursor += 2 #+2 car les datas sont sous la forme : type, channel, data
         while i < INFO[2] :
             row_data.append(PAYLOAD[_Cursor]) 
-            print("Cursor :%d"%_Cursor)
-            print ("row data[%d] :%d" %(i,row_data[i]))
+            # print("Cursor :%d"%_Cursor)
+            # print ("row data[%d] :%d" %(i,row_data[i]))
             _Cursor += 1
             i += 1 
 
@@ -124,29 +158,87 @@ def decoder (PAYLOAD):
     
     return data
 
+#
+# Function ctrlc_handler
+def ctrlc_handler(signum, frame):
+    global _shutdownEvent, _condition
+    print("<CTRL + C> action detected ...")
+    # activate shutdown mode
+    assert _shutdownEvent!=None
+    _shutdownEvent.set()
+    # ... and notify to timer
+    try:
+        _condition.acquire()
+        _condition.notify()
+        _condition.release()
+    except Exception as ex:
+        pass
 
-def main():
-    # a = infodata(8)
-    # print(a)
-    # # b=transfo_data(a,[0x00,0x00,0x99,0x42])
-    # b=transfo_data(a,1)
-    # print(b)
+def Senso_campus(UID):
+    #demande a Senso_campus les info par rappor à un uID
+    return 0
 
-    payl=[0x01,0x1E,0x05,0x39,0xA5,0x01,0x08,0x44,0x0E,0x09,0x44,0x3F,0x08,0xFF,0x85,0x09,0xFF,0x0A,0x0A,0xFF,0x70,0x17,0x06,0xFF,0xFF,0x0D,0xFF,0x3C,0x00,0xCC]
-    #decimal : 1 30 5 57 165 1 8 68 14 9 68 63 8 255 133 9 255 10 10 255 112 23 6 255 255 13 255 60 0 204 
 
-    #data :0x39 Lum = 421.00  0x44 Temp *C = 23.67  0x44 Hum. % = 31.93  0xFF Temp test: -10.80   0xFF Humi test: 5.00  0xFF CO2 test: 6000.00   0xFF Presence test: 1.00    Energy test: 60.80
+#Va envoyer le message avec la data et l'unit de la data dans le bon topic MQTT(Pour le test ça sera /command)
+def PUBLISH(payload, data):
+    uID = payload["uunitid"] #TODO a verifier !!!
+    #TODO demander a Senso campus quelles est le site, le batiment et la salle de cet uID
+    topic ="TestTopic/lora/command" #donner par senso campus
+    publish_payl = json.dumps({'unitID': uID, 'value': data[0], 'value_units': data[1]}, sort_keys=True)
+    client.publish(topic,publish_payl)#publish
+
+
+
+
+
+def myMsgHandler(topic, payload):
+    time.sleep(1)
+    log.debug("MSG topic '%s' received ..." % str(topic) )
+    # print( payload )
+    payl= payload["data"] #recupere seulement le champ data du message 
     print(payl)
-    while _Cursor < len(payl): 
-        aa=decoder(payl)
-        print("Unit :%s"%aa[1])
-        print("value final:%f"%aa[0])
-        
-    print("cursor final:%d" %_Cursor)
+    while _Cursor < len(payl):
+        data_dec=decoder(payl)
+        print("Unit :%s"%data_dec[1])
+        print("value final:%f"%data_dec[0])
+        PUBLISH(payl,data_dec)
+           
 
 
 
 
-if __name__ == "__main__":
-    main()
-    pass
+broker="neocampus.univ-tlse3.fr"
+port=1883
+#define callback
+
+client= paho.Client("Client1") #create client object client1.on_publish = on_publish #assign function to callback client1.connect(broker,port) #establish connection client1.publish("house/bulb1","on")
+######Bind function to callback
+client.myMsgHandler=myMsgHandler
+client.username_pw_set(username="...",password="...") #A changer pour le test 
+print("connecting to broker ",broker)
+client.connect(broker,port)#connect
+client.loop_start() #start loop to process received messages
+print("subscribing ")
+client.subscribe("TestTopic/lora/#")#subscribe
+time.sleep(100)
+# print("publishing ")
+# client.publish("TestTopic/lora/","coucou")#publish
+time.sleep(4)
+client.disconnect() #disconnect
+client.loop_stop() #stop loop
+
+
+# def main():
+#     # a = infodata(8)
+#     # print(a)
+#     # # b=transfo_data(a,[0x00,0x00,0x99,0x42])
+#     # b=transfo_data(a,1)
+#     # print(b)
+
+   
+
+
+
+# if __name__ == "__main__":
+#     main()
+#     pass
