@@ -138,25 +138,33 @@ class CommModule(Thread):
 
 
     ''' prepares and sends a payload in a MQTT message '''
-    def send_message(self, topic, payload):
-        if not self.is_connected():
-            log.warn("tried to publish a message while not connected ...")
-            return
+    def send_message(self,topic, payload):
 
-        if 'unitID' not in payload:
-            payload['unitID'] = self._unitID
+        # uID = payload["appargs"]
+        # #TODO demander a Senso campus quelles est le site, le batiment et la salle de cet uID
+        # topic ="TestTopic/lora/"+uID+"/command" #donner par senso campus
+        # publish_payl = json.dumps({'unitID': uID, 'value': data[0], 'value_units': data[1]}, sort_keys=True)
+        # # client.publish(topic,publish_payl)#publish
+        # res, mid = self._connection.publish(topic,publish_payl)
+        # if not self.is_connected():
+        #     log.warn("tried to publish a message while not connected ...")
+        #     return
 
-        if( payload['unitID'] is None ):
-            log.warn("tried to publish a message while not having a unitID ... aborting")
-            return
+        # if 'unitID' not in payload:
+        #     payload['unitID'] = self._unitID
 
-        if( self.sim is True ):
-            return
+        # if( payload['unitID'] is None ):
+        #     log.warn("tried to publish a message while not having a unitID ... aborting")
+        #     return
 
-        res, mid = self._connection.publish(topic, json.dumps(payload))
+        # if( self.sim is True ):
+        #     return
 
-        if res != mqtt_client.MQTT_ERR_SUCCESS:
-            log.error("on message published to topic " + topic)
+        # res, mid = self._connection.publish(topic, json.dumps(payload))
+
+        # if res != mqtt_client.MQTT_ERR_SUCCESS:
+        #     log.error("on message published to topic " + topic)
+        pass
 
 
     ''' handles pre-validated MQTT messages, to be implemented by subclasses '''

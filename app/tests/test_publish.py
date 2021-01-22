@@ -191,17 +191,17 @@ def PUBLISH(payload, data):
 
 
 
-def myMsgHandler(topic, payload):
+def on_message(client, userdata, message):
     time.sleep(1)
-    log.debug("MSG topic '%s' received ..." % str(topic) )
+    # log.debug("MSG topic '%s' received ..." % str(topic) )
     # print( payload )
-    payl= payload["data"] #recupere seulement le champ data du message 
+    payl= message["data"] #recupere seulement le champ data du message 
     print(payl)
-    while _Cursor < len(payl):
-        data_dec=decoder(payl)
-        print("Unit :%s"%data_dec[1])
-        print("value final:%f"%data_dec[0])
-        PUBLISH(payl,data_dec)
+    # while _Cursor < len(payl):
+    #     data_dec=decoder(payl)
+    #     print("Unit :%s"%data_dec[1])
+    #     print("value final:%f"%data_dec[0])
+    #     PUBLISH(payl,data_dec)
            
 
 
@@ -213,7 +213,7 @@ port=1883
 
 client= paho.Client("Client1") #create client object client1.on_publish = on_publish #assign function to callback client1.connect(broker,port) #establish connection client1.publish("house/bulb1","on")
 ######Bind function to callback
-client.myMsgHandler=myMsgHandler
+client.on_message=on_message
 client.username_pw_set(username="...",password="...") #A changer pour le test 
 print("connecting to broker ",broker)
 client.connect(broker,port)#connect
