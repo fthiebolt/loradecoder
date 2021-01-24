@@ -55,24 +55,24 @@ _Cursor =  2 #Correspond a l'emplacement dans la payload, on initialise a 2 car 
 
 #Dictionnaire des types de data
 TYPE =[
-    {'nom':'analog_input',          'unit':'...',      'ID':1,  'size':1, 'mult':1},
-    {'nom':'analog_output',         'unit':'...',      'ID':2,  'size':1, 'mult':1},
+    {'nom':'analog_input',          'unit':'...',       'ID':1,  'size':1, 'mult':1},
+    {'nom':'analog_output',         'unit':'...',       'ID':2,  'size':1, 'mult':1},
     {'nom':'digital_input',         'unit':'bool',      'ID':3,  'size':1, 'mult':1},
     {'nom':'digital_output',        'unit':'bool',      'ID':4,  'size':1, 'mult':1},
-    {'nom':'luminosity',            'unit':'lux',      'ID':5,  'size':2, 'mult':1},
+    {'nom':'luminosity',            'unit':'lux',       'ID':5,  'size':2, 'mult':1},
     {'nom':'presence',              'unit':'bool',      'ID':6,  'size':1, 'mult':1},
-    {'nom':'frequency',             'unit':'pers/j',      'ID':7,  'size':2, 'mult':1},
-    {'nom':'temperature',           'unit':'celcuis',      'ID':8,  'size':1, 'mult':100, 'ref':20, 'pas':0.25},
+    {'nom':'frequency',             'unit':'pers/j',    'ID':7,  'size':2, 'mult':1},
+    {'nom':'temperature',           'unit':'celcuis',   'ID':8,  'size':1, 'mult':100, 'ref':20, 'pas':0.25},
     {'nom':'humidity',              'unit':'%r.H',      'ID':9,  'size':1, 'mult':100, 'ref':0, 'pas':0.5},
-    {'nom':'CO2',                   'unit':'ppm',      'ID':10, 'size':2, 'mult':1},
-    {'nom':'air_quality',           'unit':'ppm',      'ID':11, 'size':1, 'mult':1},
-    {'nom':'GPS',                   'unit':'...',      'ID':12, 'size':9, 'mult':1},
+    {'nom':'CO2',                   'unit':'ppm',       'ID':10, 'size':2, 'mult':1},
+    {'nom':'air_quality',           'unit':'ppm',       'ID':11, 'size':1, 'mult':1},
+    {'nom':'GPS',                   'unit':'...',       'ID':12, 'size':9, 'mult':1},
     {'nom':'energy',                'unit':'W/m2',      'ID':13, 'size':3, 'mult':1},
     {'nom':'UV',                    'unit':'W/m2',      'ID':14, 'size':3, 'mult':1},
-    {'nom':'weight',                'unit':'g',      'ID':15, 'size':3, 'mult':1},
+    {'nom':'weight',                'unit':'g',         'ID':15, 'size':3, 'mult':1},
     {'nom':'pressure',              'unit':'mBar',      'ID':16, 'size':1, 'mult':1, 'ref':990, 'pas':1},
-    {'nom':'generic_sensor_unsi',   'unit':'...',      'ID':17, 'size':4, 'mult':1},
-    {'nom':'generic_sensor_sign',   'unit':'...',      'ID':18, 'size':4, 'mult':1},
+    {'nom':'generic_sensor_unsi',   'unit':'...',       'ID':17, 'size':4, 'mult':1},
+    {'nom':'generic_sensor_sign',   'unit':'...',       'ID':18, 'size':4, 'mult':1},
 ]
 
 
@@ -98,10 +98,22 @@ def ctrlc_handler(signum, frame):
         pass
 
 
+#transforme une liste de char en liste de valeur hexa utilisable par le decoder
+def str_to_int(payload):
+    if len(payload)%2 == 1:#Si la liste na pas un nombre d'elements pair alors il y a un pb
+        print("PB payload n'a pas un nombre d'éléments pair dans str_to_hex")
+        return 0
+    else :
+        cursor = 0
+        new_payl = []
+        while cursor < len(payload) :
+            new_payl.append(int("0X"+payload[cursor]+payload[cursor+1],16)) #on regroupe les deux elements de payload 
+            cursor +=2
+        return new_payl
 
-#*** Retourne une liste avec nom, size, mult, ref, pas d'un type de data ***
+#*** Retourne une liste avec nom, unit, size, mult, ref, pas d'un type de data ***
 def infodata (data_type):
-    #data_type : est un eniter qui correspond au type de la data d'apres la convention cayenne 
+    #data_type : est un eniter qui correspond au type de la data d'apres la convention neOCayenne 
 
     print ("datatype :%d" % data_type)
     for ind in TYPE : #on parcour le dictionnaire TYPE et on regarde si data_type correspond a une ID connu 
@@ -120,13 +132,12 @@ def infodata (data_type):
     return False
 
 
-#*** Transforme les datas de la convention cayenne en float
+#*** Transforme les datas de la convention neOCayenne en float
 def transfo_data (info,data):
-    #info : est la liste renvoye par infodata qui contien nom, size, mult, ref, pas d'un type de data 
+    #info : est la liste renvoye par infodata() qui contient nom, unit, size, mult, ref, pas d'un type de data 
     #data : est la data un tableau qui represente la data sous forme cayenne
     #DATA : est la data sous forme de float 
 
-    # print ("in transfo data :%d ",data[0])
     if len(info) == 4 : #Les datas sans références
         if info[2] == 1: #La data est un binaire sur 1 octet
             DATA = data[0]
@@ -150,10 +161,10 @@ def transfo_data (info,data):
             if pf == 1 : #cas eniter negatif
                 data=data[0] - (data[0]>>7)
                 # print("temp :%d"%data)
-                DATA = ((-data) * info[5]*100)/100 + info[4]
+                DATA = ((-data) * info[5]*info[3])/info[3] + info[4]
 
             else : #cas entier possitif
-                DATA = (data[0] * info[5]*100)/100 + info[4]
+                DATA = (data[0] * info[5]*info[3])/info[3] + info[4]
 
         else :
             DATA = (data[0] * info[5]) + info[4]
@@ -162,11 +173,13 @@ def transfo_data (info,data):
 
 #TODO faire des cas si il y a des pb !!!!
 
-#*** Retourne la payload avec les informations du capteur pour MQTT
+#*** Retourne un tableau avec la data et l'unite de cette data
 def decoder (PAYLOAD):
-    #payload : la payload lora recut en MQTT
-    #cursor : emplacement dans la payload du capteur
+    #PAYLOAD : la payload de data sous forme d'un tableau d'hexadecimal
+    #_Cursor : variable global. emplacement dans la payload du capteur
     #data : [data, unit]
+    #row_data : tableau contenant la data sous forme neOCayenneLPP
+
     global _Cursor
     data = []
     row_data = []
@@ -174,11 +187,9 @@ def decoder (PAYLOAD):
 
     if _Cursor < len(PAYLOAD) :
         INFO = infodata(PAYLOAD[_Cursor])
-        _Cursor += 2 #+2 car les datas sont sous la forme : type, channel, data
-        while i < INFO[2] :
+        _Cursor += 2 #+2 car les datas sont sous la forme : type, channel, data donc on ne s'interesse pas a type et channel
+        while i < INFO[2] : # INFO[2] est la taille en octet de la data 
             row_data.append(PAYLOAD[_Cursor]) 
-            # print("Cursor :%d"%_Cursor)
-            # print ("row data[%d] :%d" %(i,row_data[i]))
             _Cursor += 1
             i += 1 
 
@@ -186,39 +197,28 @@ def decoder (PAYLOAD):
         data.append(INFO[1])
 
     else :
-        print("PB en _Cursor dehors de payload dans decoder")
+        print("PB _Cursor en dehors de payload dans decoder")
         return False
     
     return data
 
 
+# #TODO
+# def Senso_campus(UID):
+#     #demande a Senso_campus les info par rappor à un uID
+#     return 0
 
-def Senso_campus(UID):
-    #demande a Senso_campus les info par rappor à un uID
-    return 0
 
-
-#Va envoyer le message avec la data et l'unit de la data dans le bon topic MQTT(Pour le test ça sera /command)
+#Envoie le message avec la data et l'unit de la data dans le bon topic MQTT(Pour le test ça sera TestTopic/Lora/command)
 def PUBLISH(payload, data):
-    uID = payload["appargs"] #TODO a verifier !!!
+    #data : [data, unit]
+
+    uID = payload["appargs"] 
     #TODO demander a Senso campus quelles est le site, le batiment et la salle de cet uID
     topic ="TestTopic/lora/"+uID+"/command" #donner par senso campus
     publish_payl = json.dumps({'unitID': uID, 'value': data[0], 'value_units': data[1]}, sort_keys=True)
     mqtt_client.publish(topic,publish_payl)#publish
 
-
-#transforme la liste de char en liste de valeur hexa utilisable par le decoder
-def str_to_int(payload):
-    if len(payload)%2 == 1:#Si la liste na pas un nombre d'elements pair alors il y a un pb
-        print("PB payload n'a pas un nombre d'éléments pair dans str_to_hex")
-        return 0
-    else :
-        cursor = 0
-        new_payl = []
-        while cursor < len(payload) :
-            new_payl.append(int("0X"+payload[cursor]+payload[cursor+1],16)) #on regroupe les deux elements de payload 
-            cursor +=2
-        return new_payl
 
 def myMsgHandler(topic, payload):
     time.sleep(1)
